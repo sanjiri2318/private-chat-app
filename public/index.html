@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Private Chat</title>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/png" href="/generated-icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
       box-sizing: border-box;
@@ -14,319 +11,105 @@
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
     }
 
     .container {
-      max-width: 600px;
-      margin: auto;
+      max-width: 400px;
+      margin: 40px auto;
+      background: #ffffff10;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      background: white;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      border-radius: 16px;
-      overflow: hidden;
+      gap: 20px;
     }
 
-    .header {
-      background: linear-gradient(to right, #25d366, #128c7e);
-      color: white;
-      padding: 15px 20px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .title .name {
-      font-weight: bold;
-      font-size: 20px;
-    }
-
-    .title .number {
-      font-size: 13px;
-      color: #e0f2f1;
-    }
-
-    .status {
-      font-size: 12px;
-      color: #c8e6c9;
-    }
-
-    #login, #chatSetup {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      gap: 14px;
-      padding: 20px;
+    h2 {
+      text-align: center;
+      color: #f0f0f0;
     }
 
     input {
+      width: 100%;
       padding: 14px;
       font-size: 16px;
-      width: 100%;
-      max-width: 400px;
-      border: 1px solid #ccc;
+      border: none;
       border-radius: 10px;
-      transition: 0.3s;
-    }
-
-    input:focus {
+      background-color: #f0f0f0;
       outline: none;
-      border-color: #25d366;
-      box-shadow: 0 0 5px rgba(37, 211, 102, 0.4);
     }
 
     button {
-      padding: 14px 24px;
-      background: linear-gradient(to right, #25d366, #128c7e);
-      color: white;
+      padding: 14px;
       font-size: 16px;
-      font-weight: bold;
+      background: linear-gradient(to right, #43cea2, #185a9d);
       border: none;
       border-radius: 10px;
+      color: white;
       cursor: pointer;
-      transition: 0.3s;
+      transition: background 0.3s;
     }
 
     button:hover {
-      opacity: 0.9;
+      background: linear-gradient(to right, #38ef7d, #11998e);
     }
 
-    #chat {
+    .hidden {
       display: none;
-      flex-direction: column;
-      height: 100%;
     }
 
-    #messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      background: #ece5dd;
-    }
-
-    #typing {
-      height: 20px;
-      font-style: italic;
-      font-size: 12px;
-      padding-left: 15px;
-      color: gray;
-    }
-
-    #form {
-      display: flex;
-      border-top: 1px solid #ccc;
-      background: #fff;
-      padding: 10px;
-    }
-
-    #input {
-      flex: 1;
-      padding: 14px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-    }
-
-    button.send {
-      margin-left: 10px;
-      background: #25d366;
-      color: white;
-      font-weight: bold;
-      padding: 14px 20px;
-      border: none;
-      border-radius: 10px;
-    }
-
-    .bubble {
-      max-width: 80%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      margin: 8px;
-      position: relative;
-      font-size: 15px;
-      line-height: 1.4;
-      background: #f0f0f0;
-    }
-
-    .sender {
-      align-self: flex-end;
-      background: #dcf8c6;
-    }
-
-    .receiver {
-      align-self: flex-start;
-      background: #fff;
-    }
-
-    .bubble .name {
-      font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .timestamp {
-      font-size: 10px;
-      color: gray;
-      text-align: right;
-      margin-top: 5px;
+    @media (max-width: 480px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="login">
-      <h2>🔐 Enter Your Info</h2>
-      <input id="myNumber" placeholder="Your number (e.g., 9876543210)" />
-      <input id="myName" placeholder="Your name (e.g., Sanjith)" />
-      <button onclick="goToChatSetup()">Next</button>
-    </div>
-
-    <div id="chatSetup" style="display: none;">
-      <h2>📲 Who do you want to chat with?</h2>
-      <input id="friendNumber" placeholder="Their number" />
-      <input id="friendDisplayName" placeholder="Give them a name (e.g., Rahul)" />
-      <button onclick="startChat()">Start Chat</button>
-    </div>
-
-    <div id="chat">
-      <div class="header" id="chatHeader">
-        <div class="title">
-          <div class="name" id="friendName">Friend</div>
-          <div class="number" id="friendPhone">+91</div>
-          <div class="status" id="friendStatus">offline</div>
-        </div>
-      </div>
-      <div id="messages"></div>
-      <div id="typing"></div>
-      <form id="form">
-        <input id="input" autocomplete="off" placeholder="Type a message..." />
-        <button class="send">Send</button>
-      </form>
-    </div>
+  <div class="container" id="login">
+    <h2>🔐 Welcome to Private Chat</h2>
+    <input id="myNumber" placeholder="Your number (e.g., 9876543210)" />
+    <input id="myName" placeholder="Your name (e.g., Sanjith)" />
+    <button onclick="goToChatSetup()">Continue</button>
   </div>
 
-  <script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
+  <div class="container hidden" id="chatSetup">
+    <h2>📲 Who do you want to chat with?</h2>
+    <input id="friendNumber" placeholder="Their number" />
+    <input id="friendDisplayName" placeholder="Give them a name" />
+    <button onclick="startChat()">Start Chat</button>
+  </div>
+
   <script>
-    const socket = io('https://private-chat-app-1.onrender.com');
-    const myNumberInput = document.getElementById('myNumber');
-    const myNameInput = document.getElementById('myName');
-    const friendNumberInput = document.getElementById('friendNumber');
-    const friendDisplayNameInput = document.getElementById('friendDisplayName');
-    const login = document.getElementById('login');
-    const chatSetup = document.getElementById('chatSetup');
-    const chat = document.getElementById('chat');
-    const form = document.getElementById('form');
-    const input = document.getElementById('input');
-    const messages = document.getElementById('messages');
-    const typing = document.getElementById('typing');
-    const friendName = document.getElementById('friendName');
-    const friendPhone = document.getElementById('friendPhone');
-    const friendStatus = document.getElementById('friendStatus');
-    const chatHeader = document.getElementById('chatHeader');
-
-    let myNumber = "";
-    let myName = "";
-    let friendNumber = "";
-    let friendAlias = "";
-
     function goToChatSetup() {
-      myNumber = myNumberInput.value.trim();
-      myName = myNameInput.value.trim();
+      const myNumber = document.getElementById('myNumber').value.trim();
+      const myName = document.getElementById('myName').value.trim();
       if (myNumber && myName) {
-        login.style.display = "none";
-        chatSetup.style.display = "flex";
+        localStorage.setItem('myNumber', myNumber);
+        localStorage.setItem('myName', myName);
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('chatSetup').classList.remove('hidden');
       } else {
         alert("Please enter both your number and name");
       }
     }
 
     function startChat() {
-      friendNumber = friendNumberInput.value.trim();
-      friendAlias = friendDisplayNameInput.value.trim();
+      const friendNumber = document.getElementById('friendNumber').value.trim();
+      const friendAlias = document.getElementById('friendDisplayName').value.trim();
       if (friendNumber && friendAlias) {
-        chatSetup.style.display = "none";
-        chat.style.display = "flex";
-        friendName.textContent = friendAlias;
-        friendPhone.textContent = friendNumber;
-        chatHeader.style.display = 'flex';
-        socket.emit('register', myNumber);
+        localStorage.setItem('friendNumber', friendNumber);
+        localStorage.setItem('friendAlias', friendAlias);
+        window.location.href = "/chat.html"; // make sure you have this page set up
       } else {
         alert("Enter friend's number and name to chat");
       }
     }
-
-    function formatTime() {
-      const now = new Date();
-      let h = now.getHours(), m = now.getMinutes();
-      const ampm = h >= 12 ? "PM" : "AM";
-      h = h % 12 || 12;
-      m = m < 10 ? '0' + m : m;
-      return `${h}:${m} ${ampm}`;
-    }
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      const text = input.value.trim();
-      if (text && myNumber && friendNumber) {
-        const msg = { from: myNumber, to: friendNumber, name: myName, text, time: formatTime() };
-        socket.emit('chat message', msg);
-        socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: false });
-        input.value = '';
-        addMessage(msg, true);
-      }
-    });
-
-    input.addEventListener('input', () => {
-      socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: input.value.length > 0 });
-    });
-
-    function addMessage(msg, isMine = false) {
-      if ((msg.from === friendNumber && msg.to === myNumber) || isMine) {
-        const bubble = document.createElement('div');
-        bubble.className = `bubble ${isMine ? 'sender' : 'receiver'}`;
-
-        const nameEl = document.createElement('div');
-        nameEl.className = 'name';
-        nameEl.textContent = msg.name;
-
-        const textEl = document.createElement('div');
-        textEl.textContent = msg.text;
-
-        const timeEl = document.createElement('div');
-        timeEl.className = 'timestamp';
-        timeEl.textContent = msg.time;
-
-        bubble.appendChild(nameEl);
-        bubble.appendChild(textEl);
-        bubble.appendChild(timeEl);
-        messages.appendChild(bubble);
-        messages.scrollTop = messages.scrollHeight;
-      }
-    }
-
-    socket.on('chat message', msg => addMessage(msg));
-
-    socket.on('clear chat', () => {
-      messages.innerHTML = '';
-      chatHeader.style.display = 'none';
-      typing.textContent = '🚫 Opponent went offline';
-    });
-
-    socket.on('online users', (onlineList) => {
-      const isOnline = onlineList.includes(friendNumber);
-      friendStatus.textContent = isOnline ? 'online' : 'offline';
-    });
-
-    socket.on('typing', ({ from, isTyping }) => {
-      if (from === friendNumber) {
-        typing.textContent = isTyping ? `${friendAlias} is typing...` : '';
-      }
-    });
   </script>
 </body>
 </html>
