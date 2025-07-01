@@ -1,5 +1,9 @@
 {
   "appId": "com.sanjiri.chatapp",
   "appName": "PrivateChat",
-  "webDir": "public"
+  "webDir": "public",
+  "server": {
+    "cleartext": true,
+    "allowNavigation": ["private-chat-app-1.onrender.com"]
+  }
 }
