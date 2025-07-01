@@ -1,5 +1,5 @@
 {
-  "appId": "com.sanjiri.privatechat",
-  "appName": "Private Chat",
+  "appId": "com.sanjiri.chatapp",
+  "appName": "PrivateChat",
   "webDir": "public"
 }

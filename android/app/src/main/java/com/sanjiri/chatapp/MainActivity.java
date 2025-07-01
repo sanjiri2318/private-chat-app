@@ -1,4 +1,4 @@
-package com.sanjiri.privatechat;
+package com.sanjiri.chatapp;
 
 import com.getcapacitor.BridgeActivity;
 

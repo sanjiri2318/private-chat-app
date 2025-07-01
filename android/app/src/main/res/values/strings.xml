@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Private Chat</string>
-    <string name="title_activity_main">Private Chat</string>
-    <string name="package_name">com.sanjiri.privatechat</string>
-    <string name="custom_url_scheme">com.sanjiri.privatechat</string>
+    <string name="app_name">PrivateChat</string>
+    <string name="title_activity_main">PrivateChat</string>
+    <string name="package_name">com.sanjiri.chatapp</string>
+    <string name="custom_url_scheme">com.sanjiri.chatapp</string>
 </resources>
