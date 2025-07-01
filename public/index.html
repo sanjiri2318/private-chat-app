@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Modern Private Chat</title>
+  <title>Private Chat</title>
   <style>
     * {
       box-sizing: border-box;
     }
+
     body {
       margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background: linear-gradient(135deg, #f9f7f7, #dbe2ef);
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #fdfcfb, #e2d1c3);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -21,23 +23,22 @@
     .container {
       width: 100%;
       max-width: 500px;
+      height: 100vh;
       background: white;
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 0 30px rgba(0,0,0,0.15);
+      border-radius: 0;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
-      height: 90vh;
     }
 
     .screen {
       flex: 1;
-      padding: 30px 20px;
+      padding: 20px 16px;
       display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 20px;
+      gap: 15px;
     }
 
     .screen.active {
@@ -45,79 +46,84 @@
     }
 
     h2 {
+      font-size: 22px;
       margin: 0;
-      font-size: 24px;
-      color: #3f72af;
+      color: #5c5470;
     }
 
     input {
-      width: 90%;
+      width: 100%;
       padding: 12px 15px;
       font-size: 16px;
       border: 1px solid #ccc;
-      border-radius: 10px;
-      outline: none;
+      border-radius: 8px;
     }
 
     button {
       padding: 12px 20px;
       font-size: 16px;
-      background-color: #3f72af;
+      background-color: #5c5470;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
     }
 
     #chat {
       flex: 1;
-      display: flex;
+      display: none;
       flex-direction: column;
+      height: 100%;
     }
 
     .header {
-      padding: 15px;
-      background: #3f72af;
+      background: #5c5470;
       color: white;
-      font-weight: bold;
-      text-align: center;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
     }
 
     #messages {
       flex: 1;
       overflow-y: auto;
-      padding: 10px;
-      background: #f9f7f7;
+      padding: 12px;
+      background: #f8f8f8;
+      display: flex;
+      flex-direction: column;
     }
 
     .bubble {
       max-width: 75%;
       padding: 10px 14px;
-      margin: 10px;
+      margin: 6px 0;
       border-radius: 12px;
       word-wrap: break-word;
-      position: relative;
     }
 
     .sender {
-      background: #a8d8ea;
       align-self: flex-end;
+      background: #b8bedd;
     }
 
     .receiver {
-      background: #fbc4ab;
       align-self: flex-start;
+      background: #ffe5ec;
     }
 
     .bubble .name {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
+      margin-bottom: 3px;
     }
 
     .timestamp {
       font-size: 10px;
-      color: gray;
       text-align: right;
+      color: gray;
+      margin-top: 4px;
     }
 
     #form {
@@ -127,54 +133,73 @@
 
     #input {
       flex: 1;
-      padding: 15px;
+      padding: 14px;
       font-size: 16px;
       border: none;
       outline: none;
     }
 
     .send {
-      background: #3f72af;
+      background: #5c5470;
       color: white;
       border: none;
-      padding: 0 20px;
+      padding: 0 16px;
       font-weight: bold;
     }
 
     #typing {
-      height: 18px;
-      padding: 0 10px;
       font-size: 12px;
-      color: #888;
+      padding: 4px 16px;
+      color: gray;
       font-style: italic;
+      height: 18px;
+    }
+
+    @media screen and (max-width: 600px) {
+      .container {
+        border-radius: 0;
+        height: 100vh;
+      }
+
+      .screen, .header {
+        padding: 20px 12px;
+      }
+
+      input, button {
+        font-size: 15px;
+      }
+
+      .bubble {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div id="loginScreen" class="screen active">
-      <h2>🚀 Let's Start Chatting</h2>
+      <h2>👤 Your Info</h2>
       <input id="myNumber" placeholder="Your phone number" />
       <input id="myName" placeholder="Your name" />
       <button onclick="goToChatSetup()">Next</button>
     </div>
 
     <div id="chatSetupScreen" class="screen">
-      <h2>💬 Start a Chat</h2>
+      <h2>💬 Start Chat</h2>
       <input id="friendNumber" placeholder="Friend's number" />
       <input id="friendDisplayName" placeholder="Friend's name" />
       <button onclick="startChat()">Start Chat</button>
     </div>
 
-    <div id="chat" style="display: none;">
+    <div id="chat">
       <div class="header">
-        <div id="friendName">Friend</div>
-        <div id="friendStatus" style="font-size:12px;">offline</div>
+        <span id="friendName">Friend</span>
+        <span id="friendStatus">offline</span>
       </div>
       <div id="messages"></div>
       <div id="typing"></div>
       <form id="form">
-        <input id="input" autocomplete="off" placeholder="Type a message..." />
+        <input id="input" placeholder="Type a message..." autocomplete="off" />
         <button class="send">Send</button>
       </form>
     </div>
