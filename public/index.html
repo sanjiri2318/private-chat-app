@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Private Chat</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #e5ddd5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .header {
+      background: #075e54;
+      color: white;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-bottom: 1px solid #064e45;
+    }
+
+    .title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .name {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .number {
+      font-size: 12px;
+      color: #ddd;
+    }
+
+    .status {
+      font-size: 12px;
+    }
+
+    #login, #chatSetup {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #login input, #chatSetup input {
+      padding: 12px;
+      font-size: 16px;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #login button, #chatSetup button {
+      padding: 12px 20px;
+      background: linear-gradient(to right, #25d366, #128c7e);
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #chat {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: scroll;
+      display: flex;
+      flex-direction: column;
+      background: #e5ddd5;
+    }
+
+    #typing {
+      height: 20px;
+      font-style: italic;
+      font-size: 12px;
+      padding-left: 10px;
+      color: gray;
+    }
+
+    #form {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+
+    #input {
+      flex: 1;
+      padding: 15px;
+      font-size: 16px;
+      border: none;
+    }
+
+    button.send {
+      padding: 15px;
+      background: #075e54;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+
+    .bubble {
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 20px;
+      margin: 5px;
+      word-wrap: break-word;
+    }
+
+    .sender {
+      align-self: flex-end;
+      background: #dcf8c6;
+    }
+
+    .receiver {
+      align-self: flex-start;
+      background: #f1f0f0;
+    }
+
+    .bubble .name {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 3px;
+    }
+
+    .timestamp {
+      font-size: 10px;
+      color: gray;
+      text-align: right;
+      margin-top: 5px;
+    }
+
+    .note {
+      color: red;
+      font-style: italic;
+      margin: 10px auto;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="login">
+      <h2>🔐 Enter Your Info</h2>
+      <input id="myNumber" placeholder="Your number (e.g., 9876543210)" />
+      <input id="myName" placeholder="Your name (e.g., Sanjith)" />
+      <button onclick="goToChatSetup()">Next</button>
+    </div>
+
+    <div id="chatSetup" style="display: none;">
+      <h2>📲 Who do you want to chat with?</h2>
+      <input id="friendNumber" placeholder="Their number" />
+      <input id="friendDisplayName" placeholder="Give them a name (e.g., Rahul)" />
+      <button onclick="startChat()">Start Chat</button>
+    </div>
+
+    <div id="chat">
+      <div class="header" id="chatHeader">
+        <div class="title">
+          <div class="name" id="friendName">Friend</div>
+          <div class="number" id="friendPhone">+91</div>
+          <div class="status" id="friendStatus">offline</div>
+        </div>
+      </div>
+      <div id="messages"></div>
+      <div id="typing"></div>
+      <form id="form">
+        <input id="input" autocomplete="off" placeholder="Type a message..." />
+        <button class="send">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const myNumberInput = document.getElementById('myNumber');
+    const myNameInput = document.getElementById('myName');
+    const friendNumberInput = document.getElementById('friendNumber');
+    const friendDisplayNameInput = document.getElementById('friendDisplayName');
+    const login = document.getElementById('login');
+    const chatSetup = document.getElementById('chatSetup');
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+    const typing = document.getElementById('typing');
+    const friendName = document.getElementById('friendName');
+    const friendPhone = document.getElementById('friendPhone');
+    const friendStatus = document.getElementById('friendStatus');
+    const chatHeader = document.getElementById('chatHeader');
+
+    let myNumber = "";
+    let myName = "";
+    let friendNumber = "";
+    let friendAlias = "";
+
+    function goToChatSetup() {
+      myNumber = myNumberInput.value.trim();
+      myName = myNameInput.value.trim();
+      if (myNumber && myName) {
+        login.style.display = "none";
+        chatSetup.style.display = "flex";
+      } else {
+        alert("Please enter both your number and name");
+      }
+    }
+
+    function startChat() {
+      friendNumber = friendNumberInput.value.trim();
+      friendAlias = friendDisplayNameInput.value.trim();
+      if (friendNumber && friendAlias) {
+        chatSetup.style.display = "none";
+        chat.style.display = "flex";
+        friendName.textContent = friendAlias;
+        friendPhone.textContent = friendNumber;
+        chatHeader.style.display = 'flex';
+        socket.emit('register', myNumber);
+      } else {
+        alert("Enter friend's number and name to chat");
+      }
+    }
+
+    function formatTime() {
+      const now = new Date();
+      let h = now.getHours(), m = now.getMinutes();
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      m = m < 10 ? '0' + m : m;
+      return `${h}:${m} ${ampm}`;
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (text && myNumber && friendNumber) {
+        const msg = { from: myNumber, to: friendNumber, name: myName, text, time: formatTime() };
+        socket.emit('chat message', msg);
+        socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: false });
+        input.value = '';
+        addMessage(msg, true);
+      }
+    });
+
+    input.addEventListener('input', () => {
+      socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: input.value.length > 0 });
+    });
+
+    function addMessage(msg, isMine = false) {
+      if ((msg.from === friendNumber && msg.to === myNumber) || isMine) {
+        const bubble = document.createElement('div');
+        bubble.className = `bubble ${isMine ? 'sender' : 'receiver'}`;
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'name';
+        nameEl.textContent = msg.name;
+
+        const textEl = document.createElement('div');
+        textEl.textContent = msg.text;
+
+        const timeEl = document.createElement('div');
+        timeEl.className = 'timestamp';
+        timeEl.textContent = msg.time;
+
+        bubble.appendChild(nameEl);
+        bubble.appendChild(textEl);
+        bubble.appendChild(timeEl);
+        messages.appendChild(bubble);
+        messages.scrollTop = messages.scrollHeight;
+      }
+    }
+
+    socket.on('chat message', msg => addMessage(msg));
+
+    socket.on('clear chat', () => {
+      messages.innerHTML = '';
+      chatHeader.style.display = 'none';
+      typing.textContent = '🚫 Opponent went offline';
+    });
+
+    socket.on('online users', (onlineList) => {
+      const isOnline = onlineList.includes(friendNumber);
+      friendStatus.textContent = isOnline ? 'online' : 'offline';
+    });
+
+    socket.on('typing', ({ from, isTyping }) => {
+      if (from === friendNumber) {
+        typing.textContent = isTyping ? `${friendAlias} is typing...` : '';
+      }
+    });
+  </script>
+</body>
+</html>
