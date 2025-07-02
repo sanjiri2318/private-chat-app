@@ -168,81 +168,79 @@
 
 <script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
 <script>
-  const socket = io("https://private-chat-app-1.onrender.com");
-
-  const input = document.getElementById("input");
-  const messages = document.getElementById("messages");
-  const typing = document.getElementById("typing");
+  const socket = io('https://private-chat-app-1.onrender.com');
 
   const myNumber = localStorage.getItem('myNumber');
   const myName = localStorage.getItem('myName');
-  const friendNumber = prompt("Enter your friend's number:");
-  const friendAlias = prompt("Give your friend a name:");
-  const friendStatus = document.getElementById('friendStatus');
-  const friendName = document.getElementById('friendName');
-  const avatar = document.getElementById('avatar');
 
-  friendName.textContent = friendAlias;
-  avatar.textContent = friendAlias.charAt(0).toUpperCase();
+  let friendNumber = "";
+  let friendAlias = "";
 
-  socket.emit('register', myNumber);
+  const input = document.getElementById("messageInput");
+  const messages = document.getElementById("messages");
 
-  input.addEventListener('input', () => {
-    socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: input.value.length > 0 });
-  });
-
-  socket.on('typing', ({ from, isTyping }) => {
-    if (from === friendNumber) {
-      typing.textContent = isTyping ? `${friendAlias} is typing...` : '';
-    }
-  });
-
-  socket.on('online users', (list) => {
-    friendStatus.textContent = list.includes(friendNumber) ? 'Online' : 'Offline';
-  });
-
-  socket.on('chat message', (msg) => {
-    if (msg.from === friendNumber && msg.to === myNumber) {
-      addMessage(msg.text, false, msg.time);
-    }
-  });
-
-  socket.on('clear chat', () => {
-    messages.innerHTML = '';
-    friendStatus.textContent = 'Offline';
-    typing.textContent = '';
-  });
+  function formatTime() {
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes();
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    m = m < 10 ? '0' + m : m;
+    return `${h}:${m} ${ampm}`;
+  }
 
   function sendMessage() {
     const text = input.value.trim();
-    if (!text) return;
-
-    const time = new Date();
-    const formatted = `${time.getHours()}:${String(time.getMinutes()).padStart(2, '0')}`;
-    const msg = {
-      from: myNumber,
-      to: friendNumber,
-      name: myName,
-      text,
-      time: formatted
-    };
-
-    socket.emit('chat message', msg);
-    socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: false });
-    addMessage(text, true, formatted);
-    input.value = '';
+    if (text && myNumber && friendNumber) {
+      const msg = {
+        from: myNumber,
+        to: friendNumber,
+        name: myName,
+        text,
+        time: formatTime()
+      };
+      socket.emit('chat message', msg);
+      socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: false });
+      input.value = '';
+      addMessage(msg, true);
+    }
   }
 
-  function addMessage(text, isMine, time) {
-    const msg = document.createElement('div');
-    msg.classList.add('message', isMine ? 'mine' : 'theirs');
-    msg.innerHTML = `
-      <div>${text}</div>
-      <div class="time">${time}</div>
-    `;
-    messages.appendChild(msg);
-    messages.scrollTop = messages.scrollHeight;
+  // 🔑 NEW: Allow Enter to Send
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  document.getElementById("sendButton").addEventListener("click", sendMessage);
+
+  function addMessage(msg, isMine = false) {
+    if ((msg.from === friendNumber && msg.to === myNumber) || isMine) {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${isMine ? "sender" : "receiver"}`;
+
+      const nameEl = document.createElement("div");
+      nameEl.className = "name";
+      nameEl.textContent = msg.name;
+
+      const textEl = document.createElement("div");
+      textEl.textContent = msg.text;
+
+      const timeEl = document.createElement("div");
+      timeEl.className = "timestamp";
+      timeEl.textContent = msg.time;
+
+      bubble.appendChild(nameEl);
+      bubble.appendChild(textEl);
+      bubble.appendChild(timeEl);
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
+    }
   }
+
+  socket.on("chat message", msg => addMessage(msg));
 </script>
+
 </body>
 </html>
