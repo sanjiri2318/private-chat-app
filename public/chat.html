@@ -3,244 +3,196 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat</title>
+  <title>Chat Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
   <style>
-    * {
+    body {
+      font-family: 'Poppins', sans-serif;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #ece9e6, #ffffff);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
-    body {
-      background: linear-gradient(to bottom right, #44318D, #6E44FF);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .header {
+      background: #4b6cb7;
       color: white;
-    }
-
-    .chat-container {
-      background: rgba(255, 255, 255, 0.08);
-      backdrop-filter: blur(20px);
-      border-radius: 20px;
-      width: 95%;
-      max-width: 500px;
-      height: 90vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-
-    .chat-header {
-      padding: 20px;
-      background: rgba(255,255,255,0.1);
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .avatar {
-      width: 45px;
-      height: 45px;
-      background: #A37DFF;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
+      padding: 15px;
+      text-align: center;
       font-size: 20px;
+      font-weight: 500;
     }
 
-    .chat-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .chat-info .name {
-      font-weight: bold;
-      font-size: 16px;
-    }
-
-    .chat-info .status {
+    #friendStatus {
       font-size: 12px;
-      color: #c4ffc4;
+      color: #fff0f0;
     }
 
     .messages {
       flex: 1;
-      padding: 20px;
+      padding: 10px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
     }
 
     .message {
-      max-width: 75%;
-      padding: 12px 16px;
-      border-radius: 18px;
+      padding: 10px 15px;
+      max-width: 70%;
+      border-radius: 20px;
+      font-size: 14px;
       position: relative;
-      word-wrap: break-word;
+      word-break: break-word;
     }
 
-    .mine {
-      background: #A37DFF;
+    .me {
       align-self: flex-end;
+      background: #d1f1ff;
+      color: #000;
       border-bottom-right-radius: 0;
     }
 
-    .theirs {
-      background: rgba(255,255,255,0.15);
+    .them {
       align-self: flex-start;
+      background: #f0f0f0;
+      color: #000;
       border-bottom-left-radius: 0;
     }
 
-    .message .time {
+    .timestamp {
       font-size: 10px;
+      color: #888;
+      margin-top: 5px;
       text-align: right;
-      margin-top: 4px;
-      color: #e0e0e0;
     }
 
     .typing {
-      font-size: 12px;
-      color: #ccccff;
-      margin: 0 20px 5px;
       font-style: italic;
+      font-size: 12px;
+      padding: 0 20px;
+      color: gray;
     }
 
     .input-area {
       display: flex;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      padding: 15px;
-      background: rgba(255,255,255,0.05);
+      border-top: 1px solid #ccc;
     }
 
-    .input-area input {
+    #input {
       flex: 1;
-      padding: 12px 14px;
-      border-radius: 25px;
+      padding: 12px;
+      font-size: 14px;
       border: none;
       outline: none;
-      font-size: 15px;
-      background: rgba(255,255,255,0.1);
-      color: white;
     }
 
-    .input-area button {
-      margin-left: 10px;
-      padding: 12px 20px;
-      background: #6E44FF;
+    button.send {
+      padding: 12px 18px;
+      background: #4b6cb7;
       color: white;
       border: none;
-      border-radius: 25px;
       cursor: pointer;
       font-weight: bold;
-      transition: 0.3s ease;
     }
 
-    .input-area button:hover {
-      opacity: 0.9;
+    @media (max-width: 600px) {
+      .header { font-size: 16px; }
+      .message { font-size: 13px; }
     }
   </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="chat-header">
-    <div class="avatar" id="avatar">R</div>
-    <div class="chat-info">
-      <div class="name" id="friendName">Friend</div>
-      <div class="status" id="friendStatus">Offline</div>
-    </div>
+  <div class="header">
+    <div id="friendName">Friend</div>
+    <div id="friendStatus">offline</div>
   </div>
+
   <div class="messages" id="messages"></div>
   <div class="typing" id="typing"></div>
+
   <div class="input-area">
-    <input id="input" type="text" placeholder="Type a message..." />
-    <button onclick="sendMessage()">Send</button>
+    <input id="input" placeholder="Type a message..." autocomplete="off" />
+    <button class="send" onclick="sendMessage()">Send</button>
   </div>
-</div>
 
-<script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
-<script>
-  const socket = io('https://private-chat-app-1.onrender.com');
+  <script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io('https://private-chat-app-1.onrender.com');
 
-  const myNumber = localStorage.getItem('myNumber');
-  const myName = localStorage.getItem('myName');
+    const urlParams = new URLSearchParams(window.location.search);
+    const myNumber = urlParams.get('myNumber');
+    const myName = urlParams.get('myName');
+    const friendNumber = urlParams.get('friendNumber');
+    const friendName = urlParams.get('friendName');
 
-  let friendNumber = "";
-  let friendAlias = "";
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+    const typing = document.getElementById('typing');
+    const friendStatus = document.getElementById('friendStatus');
+    const friendNameDiv = document.getElementById('friendName');
+    friendNameDiv.textContent = friendName;
 
-  const input = document.getElementById("messageInput");
-  const messages = document.getElementById("messages");
+    socket.emit('register', myNumber);
 
-  function formatTime() {
-    const now = new Date();
-    let h = now.getHours(), m = now.getMinutes();
-    const ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12 || 12;
-    m = m < 10 ? '0' + m : m;
-    return `${h}:${m} ${ampm}`;
-  }
+    input.addEventListener('keydown', (e) => {
+      socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: input.value.length > 0 });
 
-  function sendMessage() {
-    const text = input.value.trim();
-    if (text && myNumber && friendNumber) {
-      const msg = {
-        from: myNumber,
-        to: friendNumber,
-        name: myName,
-        text,
-        time: formatTime()
-      };
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function formatTime() {
+      const now = new Date();
+      let h = now.getHours(), m = now.getMinutes();
+      const ampm = h >= 12 ? "PM" : "AM";
+      h = h % 12 || 12;
+      m = m < 10 ? '0' + m : m;
+      return `${h}:${m} ${ampm}`;
+    }
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      const msg = { from: myNumber, to: friendNumber, name: myName, text, time: formatTime() };
       socket.emit('chat message', msg);
       socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: false });
       input.value = '';
       addMessage(msg, true);
     }
-  }
 
-  // 🔑 NEW: Allow Enter to Send
-  input.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+    function addMessage(msg, isMine) {
+      if ((msg.from === friendNumber && msg.to === myNumber) || isMine) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'message ' + (isMine ? 'me' : 'them');
+        msgDiv.innerHTML = `<div>${msg.text}</div><div class="timestamp">${msg.time}</div>`;
+        messages.appendChild(msgDiv);
+        messages.scrollTop = messages.scrollHeight;
+      }
     }
-  });
 
-  document.getElementById("sendButton").addEventListener("click", sendMessage);
+    socket.on('chat message', msg => addMessage(msg));
 
-  function addMessage(msg, isMine = false) {
-    if ((msg.from === friendNumber && msg.to === myNumber) || isMine) {
-      const bubble = document.createElement("div");
-      bubble.className = `bubble ${isMine ? "sender" : "receiver"}`;
+    socket.on('typing', ({ from, isTyping }) => {
+      if (from === friendNumber) {
+        typing.textContent = isTyping ? `${friendName} is typing...` : '';
+      }
+    });
 
-      const nameEl = document.createElement("div");
-      nameEl.className = "name";
-      nameEl.textContent = msg.name;
+    socket.on('online users', (list) => {
+      friendStatus.textContent = list.includes(friendNumber) ? 'online' : 'offline';
+    });
 
-      const textEl = document.createElement("div");
-      textEl.textContent = msg.text;
-
-      const timeEl = document.createElement("div");
-      timeEl.className = "timestamp";
-      timeEl.textContent = msg.time;
-
-      bubble.appendChild(nameEl);
-      bubble.appendChild(textEl);
-      bubble.appendChild(timeEl);
-      messages.appendChild(bubble);
-      messages.scrollTop = messages.scrollHeight;
-    }
-  }
-
-  socket.on("chat message", msg => addMessage(msg));
-</script>
-
+    socket.on('clear chat', () => {
+      messages.innerHTML = '';
+      typing.textContent = '🚫 Opponent went offline';
+    });
+  </script>
 </body>
 </html>
