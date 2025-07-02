@@ -3,226 +3,105 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Private Chat App</title>
+  <title>Private Chat</title>
   <style>
-    :root {
-      --bg: #f8f9fa;
-      --primary: #005f73;
-      --accent: #0a9396;
-      --light: #ffffff;
-      --bubble-user: #94d2bd;
-      --bubble-friend: #e9d8a6;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
     }
 
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg);
-    }
-
-    .chat-container {
+      background: linear-gradient(to bottom right, #44318D, #6E44FF);
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
-      height: 100vh;
-      max-width: 600px;
-      margin: 0 auto;
-      background: var(--light);
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    header {
-      background: var(--primary);
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-
-    .screen {
-      display: none;
-      flex: 1;
-      justify-content: center;
       align-items: center;
-      flex-direction: column;
-      padding: 2rem;
+      justify-content: center;
+      color: white;
     }
 
-    .screen.active {
-      display: flex;
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 30px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .container h2 {
+      font-size: 28px;
+      margin-bottom: 25px;
+      color: #ffffffdd;
     }
 
     input {
-      padding: 0.75rem;
-      margin: 0.5rem 0;
       width: 100%;
-      max-width: 300px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 1rem;
+      padding: 14px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #e0e0e0;
     }
 
     button {
-      padding: 0.75rem 1.5rem;
-      background: var(--accent);
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      background: linear-gradient(to right, #6E44FF, #A37DFF);
       border: none;
+      border-radius: 12px;
       color: white;
-      font-size: 1rem;
-      border-radius: 8px;
+      font-weight: bold;
       cursor: pointer;
-      margin-top: 10px;
+      transition: 0.3s ease;
     }
 
-    .chat-box {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+    button:hover {
+      opacity: 0.9;
     }
 
-    .message {
-      max-width: 70%;
-      padding: 0.6rem 1rem;
-      border-radius: 20px;
-      margin: 0.3rem 0;
-      word-wrap: break-word;
-    }
-
-    .user {
-      align-self: flex-end;
-      background: var(--bubble-user);
-    }
-
-    .friend {
-      align-self: flex-start;
-      background: var(--bubble-friend);
-    }
-
-    .footer {
-      display: flex;
-      border-top: 1px solid #ccc;
-    }
-
-    .footer input {
-      flex: 1;
-      margin: 0;
-      border: none;
-      border-radius: 0;
-      padding: 1rem;
-    }
-
-    .footer button {
-      border-radius: 0;
-    }
-
-    .status {
-      font-size: 0.8rem;
-      color: gray;
-      margin-top: 5px;
-    }
-
-    @media (max-width: 600px) {
-      .chat-container {
-        border-radius: 0;
+    @media (max-width: 500px) {
+      .container {
+        padding: 25px 20px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="chat-container">
-    <header>🌟 Private Chat</header>
-
-    <div id="login" class="screen active">
-      <input id="myNumber" placeholder="Enter your phone number" />
-      <input id="myName" placeholder="Enter your name" />
-      <button onclick="goToChatSetup()">Next</button>
-    </div>
-
-    <div id="chatSetup" class="screen">
-      <input id="friendNumber" placeholder="Friend's phone number" />
-      <input id="friendDisplayName" placeholder="Friend's name" />
-      <button onclick="startChat()">Start Chat</button>
-    </div>
-
-    <div id="chatScreen" class="screen">
-      <div class="chat-box" id="messages"></div>
-      <div class="status" id="typingStatus"></div>
-      <div class="footer">
-        <input id="input" placeholder="Type a message..." />
-        <button onclick="sendMessage()">Send</button>
-      </div>
-    </div>
+  <div class="container">
+    <h2>Private Your Info</h2>
+    <input type="text" id="myNumber" placeholder="Your number" />
+    <input type="text" id="myName" placeholder="Your name" />
+    <button onclick="goToChatSetup()">Next</button>
   </div>
 
-  <script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
   <script>
-    const socket = io('https://private-chat-app-1.onrender.com');
-    let myNumber = "", myName = "", friendNumber = "", friendName = "";
+  function goToChatSetup() {
+    const myNumber = document.getElementById("myNumber").value.trim();
+    const myName = document.getElementById("myName").value.trim();
 
-    const screens = {
-      login: document.getElementById("login"),
-      setup: document.getElementById("chatSetup"),
-      chat: document.getElementById("chatScreen")
-    };
+    if (myNumber && myName) {
+      // Save to localStorage
+      localStorage.setItem("myNumber", myNumber);
+      localStorage.setItem("myName", myName);
 
-    const inputEl = document.getElementById("input");
-    const messagesEl = document.getElementById("messages");
-    const typingStatus = document.getElementById("typingStatus");
-
-    function goToChatSetup() {
-      myNumber = document.getElementById("myNumber").value.trim();
-      myName = document.getElementById("myName").value.trim();
-      if (myNumber && myName) {
-        screens.login.classList.remove("active");
-        screens.setup.classList.add("active");
-      } else {
-        alert("Fill your number and name.");
-      }
+      // Redirect to chat.html
+      window.location.href = "chat.html";
+    } else {
+      alert("Please enter both your number and name.");
     }
-
-    function startChat() {
-      friendNumber = document.getElementById("friendNumber").value.trim();
-      friendName = document.getElementById("friendDisplayName").value.trim();
-      if (friendNumber && friendName) {
-        screens.setup.classList.remove("active");
-        screens.chat.classList.add("active");
-        socket.emit("register", myNumber);
-      } else {
-        alert("Enter your friend's number and name.");
-      }
-    }
-
-    function sendMessage() {
-      const text = inputEl.value.trim();
-      if (text) {
-        const msg = { from: myNumber, to: friendNumber, name: myName, text, time: new Date().toLocaleTimeString() };
-        socket.emit("chat message", msg);
-        socket.emit("typing", { to: friendNumber, from: myNumber, isTyping: false });
-        inputEl.value = "";
-        displayMessage(msg, true);
-      }
-    }
-
-    inputEl.addEventListener("input", () => {
-      socket.emit("typing", { to: friendNumber, from: myNumber, isTyping: inputEl.value.length > 0 });
-    });
-
-    socket.on("chat message", msg => displayMessage(msg, false));
-
-    socket.on("typing", ({ from, isTyping }) => {
-      if (from === friendNumber) {
-        typingStatus.textContent = isTyping ? `${friendName} is typing...` : "";
-      }
-    });
-
-    function displayMessage(msg, isMine) {
-      const msgEl = document.createElement("div");
-      msgEl.className = `message ${isMine ? "user" : "friend"}`;
-      msgEl.textContent = `${msg.name}: ${msg.text}`;
-      messagesEl.appendChild(msgEl);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
-    }
+  }
   </script>
 </body>
 </html>
