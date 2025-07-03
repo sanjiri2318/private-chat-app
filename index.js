@@ -8,8 +8,8 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static('public'));
 
-let onlineUsers = {}; // Store online users
-let chatMessages = {}; // Store chats per user pair
+let onlineUsers = {};
+let chatMessages = {};
 
 io.on('connection', (socket) => {
   console.log('✅ Connected:', socket.id);
@@ -20,17 +20,17 @@ io.on('connection', (socket) => {
     socket.phone = number;
     onlineUsers[number] = socket.id;
     io.emit('online users', Object.keys(onlineUsers));
-    console.log('📱 Registered:', number);
+    console.log('📲 Registered:', number);
   });
 
-  // Chat message handling
+  // Handle chat messages
   socket.on('chat message', (msg) => {
     if (msg && msg.text && msg.from && msg.to && msg.name) {
       const chatKey = getChatKey(msg.from, msg.to);
       if (!chatMessages[chatKey]) chatMessages[chatKey] = [];
       chatMessages[chatKey].push(msg);
 
-      // Send to receiver and sender
+      // Deliver message to both sender & receiver
       [msg.from, msg.to].forEach(user => {
         if (onlineUsers[user]) {
           io.to(onlineUsers[user]).emit('chat message', msg);
@@ -46,14 +46,14 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Disconnect handling
+  // On disconnect
   socket.on('disconnect', () => {
     console.log('❌ Disconnected:', socket.id);
     if (socket.phone && onlineUsers[socket.phone]) {
       delete onlineUsers[socket.phone];
       io.emit('online users', Object.keys(onlineUsers));
 
-      // Clear chat history for this user
+      // Signal-style clear chat
       Object.keys(chatMessages).forEach(chatKey => {
         if (chatKey.includes(socket.phone)) {
           delete chatMessages[chatKey];
@@ -64,7 +64,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Helper to create consistent chat key
+// Helper to create a unique chat key
 function getChatKey(user1, user2) {
   return [user1, user2].sort().join('-');
 }
