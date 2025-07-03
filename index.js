@@ -1,71 +1,77 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const cors = require('cors');
-app.use(cors());
-const http = require('http').createServer(app);
-const io = require('socket.io')(http);
+const cors = require("cors");
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static('public'));
+app.use(cors());
+app.use(express.static("public"));
 
-let onlineUsers = {};
-let chatMessages = {};
+let onlineUsers = {}; // { number: socket.id }
+let chatMessages = []; // [{from, to, name, text, time}]
 
-io.on('connection', (socket) => {
-  console.log('✅ Connected:', socket.id);
+// Handle new socket connection
+io.on("connection", (socket) => {
+  console.log("✅ User connected:", socket.id);
+
   socket.phone = null;
 
-  // Register user
-  socket.on('register', (number) => {
+  // Register user with their phone number
+  socket.on("register", (number) => {
     socket.phone = number;
     onlineUsers[number] = socket.id;
-    io.emit('online users', Object.keys(onlineUsers));
+    console.log(`📱 ${number} is online`);
+    sendOnlineUsers();
   });
 
-  // Chat message
-  socket.on('chat message', (msg) => {
-    if (msg && msg.text && msg.from && msg.to && msg.name) {
-      // Save chat per pair
-      const chatKey = [msg.from, msg.to].sort().join('-');
-      if (!chatMessages[chatKey]) chatMessages[chatKey] = [];
-      chatMessages[chatKey].push(msg);
+  // Handle incoming chat messages
+  socket.on("chat message", (msg) => {
+    if (msg && msg.text && msg.from && msg.to) {
+      chatMessages.push(msg);
 
-      // Send to receiver
+      // Send message to recipient if online
       if (onlineUsers[msg.to]) {
-        io.to(onlineUsers[msg.to]).emit('chat message', { ...msg, self: false });
+        io.to(onlineUsers[msg.to]).emit("chat message", msg);
       }
 
-      // Confirm to sender (as own message)
-      socket.emit('chat message', { ...msg, self: true });
+      // Send message back to sender (for their own display)
+      if (onlineUsers[msg.from]) {
+        io.to(onlineUsers[msg.from]).emit("chat message", msg);
+      }
     }
   });
 
-  // Typing indicator
-  socket.on('typing', ({ to, from, isTyping }) => {
+  // Handle typing indicator
+  socket.on("typing", ({ to, from, isTyping }) => {
     if (onlineUsers[to]) {
-      io.to(onlineUsers[to]).emit('typing', { from, isTyping });
+      io.to(onlineUsers[to]).emit("typing", { from, isTyping });
     }
   });
 
-  // Disconnect
-  socket.on('disconnect', () => {
-    console.log('❌ Disconnected:', socket.id);
-    if (socket.phone && onlineUsers[socket.phone]) {
+  // Handle user disconnect
+  socket.on("disconnect", () => {
+    if (socket.phone) {
+      console.log(`❌ ${socket.phone} disconnected`);
       delete onlineUsers[socket.phone];
-      io.emit('online users', Object.keys(onlineUsers));
+      sendOnlineUsers();
+    }
 
-      // Clear chat if one user leaves
-      const userKeys = Object.keys(chatMessages);
-      userKeys.forEach((key) => {
-        if (key.includes(socket.phone)) {
-          delete chatMessages[key];
-          io.emit('clear chat', { chatKey: key });
-        }
-      });
+    // Clear chat if fewer than 2 users online
+    if (Object.keys(onlineUsers).length < 2) {
+      console.log("⚡ Less than 2 users online. Clearing chats.");
+      chatMessages = [];
+      io.emit("clear chat");
     }
   });
+
+  // Send current online users to all clients
+  function sendOnlineUsers() {
+    io.emit("online users", Object.keys(onlineUsers));
+  }
 });
 
+// Start the server
 http.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
