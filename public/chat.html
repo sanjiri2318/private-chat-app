@@ -3,149 +3,149 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Private Chat</title>
+  <title>Chat Room</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: #f5f5f5;
+      font-family: 'Inter', sans-serif;
+      background: #f0f4f8;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       height: 100vh;
     }
-    .header {
-      background: linear-gradient(135deg, #ff6a00, #ee0979);
-      color: #fff;
-      padding: 15px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    #friendStatus {
-      font-size: 14px;
-      color: #ffe;
-    }
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px;
+    .chat-container {
+      background: #fff;
+      width: 100%;
+      max-width: 500px;
+      height: 90vh;
       display: flex;
       flex-direction: column;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .header {
+      background: #3B82F6;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      animation: slideDown 0.5s ease-out forwards;
+    }
+    #messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background: #f9fafb;
     }
     .bubble {
-      max-width: 70%;
-      padding: 10px 15px;
-      border-radius: 15px;
       margin: 5px;
-      animation: slideUp 0.3s ease forwards;
+      padding: 10px 15px;
+      border-radius: 18px;
+      max-width: 75%;
+      line-height: 1.4;
+      animation: fadeIn 0.4s ease-out forwards;
     }
     .sender {
+      background: #3B82F6;
+      color: white;
       align-self: flex-end;
-      background: #dcf8c6;
     }
     .receiver {
+      background: #e5e7eb;
+      color: #111827;
       align-self: flex-start;
-      background: #f1f0f0;
     }
-    .timestamp {
-      font-size: 10px;
-      color: #888;
-      text-align: right;
+    #typing {
+      font-size: 12px;
+      color: gray;
+      padding: 5px;
     }
-    .input-box {
+    .input-container {
       display: flex;
-      border-top: 1px solid #ddd;
+      border-top: 1px solid #e5e7eb;
     }
-    .input-box input {
+    input {
       flex: 1;
-      padding: 15px;
+      padding: 12px;
       border: none;
-      font-size: 16px;
+      outline: none;
     }
-    .input-box button {
-      padding: 15px;
-      background: #ff6a00;
-      color: #fff;
+    button {
+      background: #3B82F6;
+      color: white;
       border: none;
-      font-weight: bold;
+      padding: 12px 18px;
       cursor: pointer;
     }
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px);}
+      to { opacity: 1; transform: translateY(0);}
     }
-    .typing {
-      font-style: italic;
-      color: #888;
-      padding: 5px 15px;
-      font-size: 13px;
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px);}
+      to { opacity: 1; transform: translateY(0);}
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div id="friendName">Friend</div>
-    <div id="friendStatus">offline</div>
-  </div>
-  <div class="messages" id="messages"></div>
-  <div class="typing" id="typing"></div>
-  <div class="input-box">
-    <input id="input" placeholder="Type a message..." autocomplete="off" />
-    <button onclick="sendMessage()">Send</button>
+  <div class="chat-container">
+    <div class="header" id="chatHeader">Chat</div>
+    <div id="messages"></div>
+    <div id="typing"></div>
+    <div class="input-container">
+      <input id="input" placeholder="Type a message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
   </div>
 
   <script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
   <script>
     const socket = io('https://private-chat-app-1.onrender.com');
-    const myNumber = sessionStorage.getItem('myNumber');
-    const myName = sessionStorage.getItem('myName');
-    const friendNameEl = document.getElementById('friendName');
-    const friendStatus = document.getElementById('friendStatus');
+    const myNumber = localStorage.getItem('myNumber');
+    const myName = localStorage.getItem('myName');
+    const friendNumber = localStorage.getItem('friendNumber');
+    const friendName = localStorage.getItem('friendName');
+    document.getElementById('chatHeader').textContent = friendName;
+
+    socket.emit('register', myNumber);
+
     const messages = document.getElementById('messages');
     const input = document.getElementById('input');
     const typing = document.getElementById('typing');
 
-    let friendNumber = prompt("Enter friend's number:");
-    let friendAlias = prompt("Enter friend's name:");
-
-    friendNameEl.textContent = friendAlias;
-    socket.emit('register', myNumber);
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+      socket.emit('typing', { to: friendNumber, from: myName, isTyping: input.value.length > 0 });
+    });
 
     function sendMessage() {
       const text = input.value.trim();
       if (text) {
         const msg = { from: myNumber, to: friendNumber, name: myName, text, time: new Date().toLocaleTimeString() };
         socket.emit('chat message', msg);
-        addMessage(msg, true);
         input.value = '';
-        socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: false });
       }
     }
 
-    input.addEventListener('keypress', e => {
-      if (e.key === 'Enter') sendMessage();
-      else socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: true });
+    socket.on('chat message', msg => {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${msg.self ? 'sender' : 'receiver'}`;
+      bubble.textContent = msg.text;
+      messages.appendChild(bubble);
+      messages.scrollTop = messages.scrollHeight;
     });
 
-    socket.on('chat message', msg => addMessage(msg));
     socket.on('typing', ({ from, isTyping }) => {
-      typing.textContent = isTyping ? `${friendAlias} is typing...` : '';
+      typing.textContent = isTyping ? `${friendName} is typing...` : '';
     });
-    socket.on('online users', users => {
-      friendStatus.textContent = users.includes(friendNumber) ? 'online' : 'offline';
-    });
+
     socket.on('clear chat', () => {
       messages.innerHTML = '';
     });
-
-    function addMessage(msg, isMine) {
-      const bubble = document.createElement('div');
-      bubble.className = `bubble ${isMine ? 'sender' : 'receiver'}`;
-      bubble.innerHTML = `<div>${msg.text}</div><div class="timestamp">${msg.time}</div>`;
-      messages.appendChild(bubble);
-      messages.scrollTop = messages.scrollHeight;
-    }
   </script>
 </body>
 </html>

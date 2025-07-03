@@ -3,77 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Private Chat - Login</title>
+  <title>Private Chat Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #fff;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #6EE7B7, #3B82F6);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
+      color: #fff;
     }
-    .login-box {
-      background: rgba(0,0,0,0.3);
-      padding: 40px;
-      border-radius: 20px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    .login-container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 15px;
       text-align: center;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
       animation: fadeIn 1s ease forwards;
     }
-    .login-box h1 {
+    h1 {
       margin-bottom: 20px;
-      font-size: 28px;
     }
-    .login-box input {
-      width: 80%;
+    input, button {
+      width: 90%;
       padding: 12px;
       margin: 10px 0;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 16px;
     }
-    .login-box button {
-      padding: 12px 30px;
-      background: #ff6a00;
-      color: #fff;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
+    input {
+      background: rgba(255, 255, 255, 0.8);
+      color: #333;
+    }
+    button {
+      background: #10B981;
+      color: white;
       cursor: pointer;
-      transition: background 0.3s ease;
+      font-weight: bold;
+      transition: background 0.3s;
     }
-    .login-box button:hover {
-      background: #ee0979;
+    button:hover {
+      background: #059669;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.9); }
-      to { opacity: 1; transform: scale(1); }
+      from { opacity: 0; transform: scale(0.9);}
+      to { opacity: 1; transform: scale(1);}
     }
   </style>
 </head>
 <body>
-  <div class="login-box">
+  <div class="login-container">
     <h1>🔐 Private Chat</h1>
-    <input type="text" id="myNumber" placeholder="Your number (e.g. 9876543210)" />
-    <input type="text" id="myName" placeholder="Your name (e.g. Sanjith)" />
-    <button onclick="goToChat()">Start Chat</button>
+    <input id="myNumber" placeholder="Your number (e.g. 9876543210)" />
+    <input id="myName" placeholder="Your name (e.g. Sanjith)" />
+    <input id="friendNumber" placeholder="Friend's number" />
+    <input id="friendName" placeholder="Friend's name (e.g. Rahul)" />
+    <button onclick="startChat()">Start Chat</button>
   </div>
 
   <script>
-    function goToChat() {
+    function startChat() {
       const myNumber = document.getElementById('myNumber').value.trim();
       const myName = document.getElementById('myName').value.trim();
-      if (!myNumber || !myName) {
-        alert("Please fill in both fields.");
-        return;
+      const friendNumber = document.getElementById('friendNumber').value.trim();
+      const friendName = document.getElementById('friendName').value.trim();
+
+      if (myNumber && myName && friendNumber && friendName) {
+        localStorage.setItem('myNumber', myNumber);
+        localStorage.setItem('myName', myName);
+        localStorage.setItem('friendNumber', friendNumber);
+        localStorage.setItem('friendName', friendName);
+        window.location.href = 'chat.html';
+      } else {
+        alert('Fill all fields to start chatting!');
       }
-      sessionStorage.setItem('myNumber', myNumber);
-      sessionStorage.setItem('myName', myName);
-      window.location.href = 'chat.html';
     }
   </script>
 </body>

@@ -20,54 +20,51 @@ io.on('connection', (socket) => {
     socket.phone = number;
     onlineUsers[number] = socket.id;
     io.emit('online users', Object.keys(onlineUsers));
-    console.log('📲 Registered:', number);
   });
 
-  // Handle chat messages
+  // Chat message
   socket.on('chat message', (msg) => {
     if (msg && msg.text && msg.from && msg.to && msg.name) {
-      const chatKey = getChatKey(msg.from, msg.to);
+      // Save chat per pair
+      const chatKey = [msg.from, msg.to].sort().join('-');
       if (!chatMessages[chatKey]) chatMessages[chatKey] = [];
       chatMessages[chatKey].push(msg);
 
-      // Deliver message to both sender & receiver
-      [msg.from, msg.to].forEach(user => {
-        if (onlineUsers[user]) {
-          io.to(onlineUsers[user]).emit('chat message', msg);
-        }
-      });
+      // Send to receiver
+      if (onlineUsers[msg.to]) {
+        io.to(onlineUsers[msg.to]).emit('chat message', { ...msg, self: false });
+      }
+
+      // Confirm to sender (as own message)
+      socket.emit('chat message', { ...msg, self: true });
     }
   });
 
-  // Typing status
+  // Typing indicator
   socket.on('typing', ({ to, from, isTyping }) => {
     if (onlineUsers[to]) {
       io.to(onlineUsers[to]).emit('typing', { from, isTyping });
     }
   });
 
-  // On disconnect
+  // Disconnect
   socket.on('disconnect', () => {
     console.log('❌ Disconnected:', socket.id);
     if (socket.phone && onlineUsers[socket.phone]) {
       delete onlineUsers[socket.phone];
       io.emit('online users', Object.keys(onlineUsers));
 
-      // Signal-style clear chat
-      Object.keys(chatMessages).forEach(chatKey => {
-        if (chatKey.includes(socket.phone)) {
-          delete chatMessages[chatKey];
-          io.emit('clear chat', chatKey);
+      // Clear chat if one user leaves
+      const userKeys = Object.keys(chatMessages);
+      userKeys.forEach((key) => {
+        if (key.includes(socket.phone)) {
+          delete chatMessages[key];
+          io.emit('clear chat', { chatKey: key });
         }
       });
     }
   });
 });
-
-// Helper to create a unique chat key
-function getChatKey(user1, user2) {
-  return [user1, user2].sort().join('-');
-}
 
 http.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
