@@ -1,85 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Start Chat</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Chat Login</title>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(to right, #ffe0e0, #ffffff);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #fff;
     }
 
-    .card {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    .login-container {
+      width: 90%;
       max-width: 400px;
-      width: 100%;
-    }
-
-    .card h2 {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       text-align: center;
+    }
+
+    h1 {
       margin-bottom: 20px;
-      color: #333;
+      font-size: 26px;
+      color: #fff;
     }
 
-    .card input {
+    input {
       width: 100%;
-      padding: 12px;
+      padding: 12px 15px;
       margin: 10px 0;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border: none;
+      border-radius: 25px;
       font-size: 16px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
     }
 
-    .card button {
+    input::placeholder {
+      color: #ddd;
+    }
+
+    button {
       width: 100%;
       padding: 12px;
-      background: #ff5858;
-      color: white;
-      font-size: 16px;
+      margin-top: 15px;
+      background: #764ba2;
       border: none;
-      border-radius: 8px;
+      border-radius: 25px;
+      color: #fff;
+      font-size: 16px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
 
-    .card button:hover {
-      background: #e04848;
+    button:hover {
+      background: #5a3d80;
+    }
+
+    @media (max-width: 600px) {
+      .login-container {
+        padding: 20px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h2>Start Private Chat</h2>
-    <input type="text" id="myNumber" placeholder="Your Number (e.g. 9876543210)" />
-    <input type="text" id="myName" placeholder="Your Name (e.g. Sanjith)" />
-    <input type="text" id="friendNumber" placeholder="Friend's Number" />
-    <input type="text" id="friendName" placeholder="Friend's Name" />
-    <button onclick="startChat()">Start Chat</button>
+  <div class="login-container">
+    <h1>Private Chat</h1>
+    <input type="text" id="myNumber" placeholder="Enter your phone number" />
+    <input type="text" id="myName" placeholder="Enter your name" />
+    <button onclick="goToChatSetup()">Next</button>
   </div>
 
   <script>
-    function startChat() {
-      const myNumber = document.getElementById("myNumber").value.trim();
-      const myName = document.getElementById("myName").value.trim();
-      const friendNumber = document.getElementById("friendNumber").value.trim();
-      const friendName = document.getElementById("friendName").value.trim();
-
-      if (!myNumber || !myName || !friendNumber || !friendName) {
-        alert("Please fill in all fields.");
+    function goToChatSetup() {
+      const myNumber = document.getElementById('myNumber').value.trim();
+      const myName = document.getElementById('myName').value.trim();
+      if (!myNumber || !myName) {
+        alert("Please enter both your number and name.");
         return;
       }
-
-      const url = `chat.html?myNumber=${encodeURIComponent(myNumber)}&myName=${encodeURIComponent(myName)}&friendNumber=${encodeURIComponent(friendNumber)}&friendName=${encodeURIComponent(friendName)}`;
-      window.location.href = url;
+      window.location.href = `chat.html?myNumber=${encodeURIComponent(myNumber)}&myName=${encodeURIComponent(myName)}`;
     }
   </script>
 </body>
