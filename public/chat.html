@@ -4,185 +4,163 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Private Chat</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
       font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: #f7f7f7;
+      color: #333;
       display: flex;
-      flex-direction: column;
-      height: 100vh;
-      color: #fff;
-    }
-
-    .header {
-      padding: 15px;
-      background: rgba(0, 0, 0, 0.3);
-      display: flex;
+      justify-content: center;
       align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      animation: slideDown 0.8s ease forwards;
-      opacity: 0;
+      height: 100vh;
     }
-
-    .friend-info {
+    .chat-container {
+      width: 100%;
+      max-width: 500px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
       display: flex;
       flex-direction: column;
+      height: 90vh;
+      overflow: hidden;
+      animation: fadeIn 1s ease-out;
     }
-
-    .friend-name {
-      font-size: 18px;
+    .header {
+      background: linear-gradient(45deg, #ff6b6b, #f06595);
+      color: #fff;
+      padding: 20px;
+      font-size: 1.2em;
+      text-align: center;
       font-weight: bold;
     }
-
-    .friend-status {
-      font-size: 12px;
-      color: #cfcfcf;
-    }
-
-    .messages {
+    #messages {
       flex: 1;
       padding: 15px;
       overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      animation: fadeIn 1s ease forwards;
-      opacity: 0;
     }
-
-    .bubble {
+    .message {
       max-width: 70%;
       padding: 10px 15px;
-      border-radius: 20px;
-      word-wrap: break-word;
-      animation: pop 0.3s ease forwards;
-      opacity: 0;
+      border-radius: 15px;
+      position: relative;
+      animation: pop 0.3s ease-out;
     }
-
     .sender {
+      background: #ff6b6b;
+      color: white;
       align-self: flex-end;
-      background: #a66dd4;
+      border-bottom-right-radius: 0;
     }
-
     .receiver {
+      background: #f1f0f0;
       align-self: flex-start;
-      background: #ffffff30;
+      border-bottom-left-radius: 0;
     }
-
-    .footer {
+    #typing {
+      padding: 10px;
+      font-style: italic;
+      color: #999;
+      min-height: 20px;
+    }
+    form {
       display: flex;
-      padding: 10px;
-      background: rgba(0, 0, 0, 0.3);
+      border-top: 1px solid #eee;
     }
-
-    .footer input {
+    input {
       flex: 1;
-      padding: 10px;
-      border-radius: 20px;
       border: none;
-      outline: none;
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
+      padding: 15px;
+      font-size: 1em;
+      border-radius: 0;
     }
-
-    .footer button {
-      margin-left: 10px;
-      padding: 10px 20px;
-      border-radius: 20px;
+    button {
+      background: #ff6b6b;
       border: none;
-      background: #764ba2;
-      color: #fff;
+      color: white;
+      padding: 0 20px;
       cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    .footer button:hover {
-      background: #5a3d80;
+      font-weight: bold;
     }
 
     @keyframes fadeIn {
-      to { opacity: 1; }
-    }
-
-    @keyframes slideDown {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes pop {
-      to { opacity: 1; transform: scale(1); }
       from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="friend-info">
-      <div class="friend-name" id="friendName"></div>
-      <div class="friend-status" id="friendStatus">offline</div>
-    </div>
-  </div>
-  <div class="messages" id="messages"></div>
-  <div class="footer">
-    <input type="text" id="messageInput" placeholder="Type a message..." />
-    <button onclick="sendMessage()">Send</button>
+  <div class="chat-container">
+    <div class="header" id="friendHeader">Chat with Friend</div>
+    <div id="messages"></div>
+    <div id="typing"></div>
+    <form id="form">
+      <input id="input" placeholder="Type a message..." autocomplete="off" />
+      <button>Send</button>
+    </form>
   </div>
 
   <script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
   <script>
     const socket = io('https://private-chat-app-1.onrender.com');
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+    const typing = document.getElementById('typing');
 
-    const myNumber = sessionStorage.getItem('myNumber');
-    const myName = sessionStorage.getItem('myName');
-    const friendNumber = sessionStorage.getItem('friendNumber');
-    const friendAlias = sessionStorage.getItem('friendName');
+    let myNumber = localStorage.getItem('myNumber');
+    let friendNumber = localStorage.getItem('friendNumber');
 
-    document.getElementById('friendName').textContent = friendAlias;
-
-    const messagesDiv = document.getElementById('messages');
-    const friendStatus = document.getElementById('friendStatus');
+    function getChatKey(user1, user2) {
+      return [user1, user2].sort().join('-');
+    }
 
     socket.emit('register', myNumber);
 
-    socket.on('online users', (onlineList) => {
-      const isOnline = onlineList.includes(friendNumber);
-      friendStatus.textContent = isOnline ? 'online' : 'offline';
-    });
-
-    socket.on('chat message', msg => {
-      if ((msg.from === friendNumber && msg.to === myNumber) || (msg.from === myNumber && msg.to === friendNumber)) {
-        const bubble = document.createElement('div');
-        bubble.className = 'bubble ' + (msg.from === myNumber ? 'sender' : 'receiver');
-        bubble.textContent = msg.text;
-        messagesDiv.appendChild(bubble);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      }
-    });
-
-    function sendMessage() {
-      const input = document.getElementById('messageInput');
-      const text = input.value.trim();
-      if (text !== '') {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (input.value) {
         const msg = {
           from: myNumber,
           to: friendNumber,
-          name: myName,
-          text: text
+          name: myNumber,
+          text: input.value,
+          time: new Date().toLocaleTimeString()
         };
         socket.emit('chat message', msg);
         input.value = '';
       }
-    }
+    });
 
-    document.getElementById('messageInput').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        sendMessage();
+    input.addEventListener('input', () => {
+      socket.emit('typing', { to: friendNumber, from: myNumber, isTyping: input.value.length > 0 });
+    });
+
+    socket.on('chat message', msg => {
+      const div = document.createElement('div');
+      div.className = 'message ' + (msg.from === myNumber ? 'sender' : 'receiver');
+      div.textContent = `${msg.name}: ${msg.text}`;
+      messages.appendChild(div);
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    socket.on('typing', ({ from, isTyping }) => {
+      typing.textContent = isTyping ? `${from} is typing...` : '';
+    });
+
+    socket.on('clear chat', (chatKey) => {
+      if (chatKey === getChatKey(myNumber, friendNumber)) {
+        messages.innerHTML = '';
+        typing.textContent = '🚫 Chat cleared (user offline)';
       }
     });
   </script>
