@@ -1,84 +1,95 @@
+
 const express = require("express");
 const app = express();
-const cors = require("cors");
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
+const cors = require("cors");
+const mongoose = require("mongoose");
 const PORT = process.env.PORT || 3000;
+
+// ✅ MongoDB Connection
+mongoose.connect("mongodb+srv://Sanjiri:Sanjithk123@privatechatdb.f4ouxdn.mongodb.net/privateChatDB?retryWrites=true&w=majority&appName=privateChatDB", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log("✅ MongoDB Connected"))
+  .catch(err => console.log("❌ MongoDB Error:", err));
+
+// Schemas
+const UserSchema = new mongoose.Schema({
+  number: String,
+  name: String
+});
+const ChatSchema = new mongoose.Schema({
+  from: String,
+  to: String,
+  text: String,
+  time: String
+});
+const User = mongoose.model("User", UserSchema);
+const Chat = mongoose.model("Chat", ChatSchema);
 
 app.use(cors());
 app.use(express.static("public"));
+app.use(express.json());
 
-let onlineUsers = {}; // { number: socket.id }
-let chatMessages = []; // [{from, to, name, text, time}]
-let typingUsers = {};  // { to: from }
+let onlineUsers = {};
 
+// Socket.io Handling
 io.on("connection", (socket) => {
   console.log("✅ User connected:", socket.id);
 
-  socket.phone = null;
-
-  // User registers with their phone number
-  socket.on("register", (number) => {
+  socket.on("register", async ({ number, name }) => {
     socket.phone = number;
     onlineUsers[number] = socket.id;
-    console.log(`📱 ${number} is online`);
+    console.log(`📱 ${name} (${number}) is online`);
+
+    let user = await User.findOne({ number });
+    if (!user) {
+      user = new User({ number, name });
+      await user.save();
+    }
+
     sendOnlineUsers();
   });
 
-  // Handle incoming messages
-  socket.on("chat message", (msg) => {
-    if (msg && msg.text && msg.from && msg.to) {
-      console.log(`💬 Message from ${msg.from} to ${msg.to}: ${msg.text}`);
-      chatMessages.push(msg);
+  socket.on("chat message", async (msg) => {
+    const newMsg = new Chat(msg);
+    await newMsg.save();
 
-      // Send message to recipient if online
-      if (onlineUsers[msg.to]) {
-        io.to(onlineUsers[msg.to]).emit("chat message", msg);
-      }
-
-      // Echo back to sender
-      if (onlineUsers[msg.from]) {
-        io.to(onlineUsers[msg.from]).emit("chat message", msg);
-      }
+    if (onlineUsers[msg.to]) {
+      io.to(onlineUsers[msg.to]).emit("chat message", msg);
+    }
+    if (onlineUsers[msg.from]) {
+      io.to(onlineUsers[msg.from]).emit("chat message", msg);
     }
   });
 
-  // Typing indicator
   socket.on("typing", ({ to, from, isTyping }) => {
     if (onlineUsers[to]) {
       io.to(onlineUsers[to]).emit("typing", { from, isTyping });
     }
-    // Track who is typing
-    if (isTyping) {
-      typingUsers[to] = from;
-    } else {
-      delete typingUsers[to];
-    }
   });
 
-  // Handle user disconnect
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     if (socket.phone) {
       console.log(`❌ ${socket.phone} disconnected`);
       delete onlineUsers[socket.phone];
       sendOnlineUsers();
     }
 
-    // Clear chat if no users left
     if (Object.keys(onlineUsers).length < 2) {
-      console.log("⚡ Less than 2 users online. Clearing chats.");
-      chatMessages = [];
+      console.log("⚡ Clearing all chats...");
+      await Chat.deleteMany({});
       io.emit("clear chat");
     }
   });
 
-  // Send all currently online users
   function sendOnlineUsers() {
     io.emit("online users", Object.keys(onlineUsers));
   }
 });
 
-// Start the server
+// Start Server
 http.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
