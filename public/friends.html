@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select Friend - Private Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+    }
+    h1 {
+      color: #66a6ff;
+    }
+    .friend {
+      background: #f1f1f1;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .friend:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    .status {
+      font-size: 14px;
+      color: gray;
+    }
+    .online {
+      color: green;
+    }
+    .offline {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>👥 Select a Friend</h1>
+    <div id="friendList"></div>
+  </div>
+
+  <script src="https://private-chat-app-1.onrender.com/socket.io/socket.io.js"></script>
+  <script>
+    const myNumber = localStorage.getItem("myNumber");
+    const myName = localStorage.getItem("myName");
+    const socket = io("https://private-chat-app-1.onrender.com");
+
+    socket.emit("register", myNumber);
+
+    const friends = [
+      { number: "1234567890", name: "Rahul" },
+      { number: "9876543210", name: "Aisha" },
+      { number: "5556667777", name: "John" },
+    ];
+
+    const friendList = document.getElementById("friendList");
+
+    function renderFriends(onlineUsers) {
+      friendList.innerHTML = "";
+      friends.forEach(friend => {
+        const div = document.createElement("div");
+        div.className = "friend";
+        div.innerHTML = `
+          <div>
+            <strong>${friend.name}</strong><br>
+            <span class="status ${onlineUsers.includes(friend.number) ? "online" : "offline"}">
+              ${onlineUsers.includes(friend.number) ? "Online" : "Offline"}
+            </span>
+          </div>
+          <div>➡️</div>
+        `;
+        div.onclick = () => {
+          localStorage.setItem("friendNumber", friend.number);
+          localStorage.setItem("friendName", friend.name);
+          window.location.href = "chat.html";
+        };
+        friendList.appendChild(div);
+      });
+    }
+
+    socket.on("online users", (onlineUsers) => {
+      renderFriends(onlineUsers);
+    });
+  </script>
+</body>
+</html>

@@ -10,14 +10,14 @@ app.use(express.static("public"));
 
 let onlineUsers = {}; // { number: socket.id }
 let chatMessages = []; // [{from, to, name, text, time}]
+let typingUsers = {};  // { to: from }
 
-// Handle new socket connection
 io.on("connection", (socket) => {
   console.log("✅ User connected:", socket.id);
 
   socket.phone = null;
 
-  // Register user with their phone number
+  // User registers with their phone number
   socket.on("register", (number) => {
     socket.phone = number;
     onlineUsers[number] = socket.id;
@@ -25,9 +25,10 @@ io.on("connection", (socket) => {
     sendOnlineUsers();
   });
 
-  // Handle incoming chat messages
+  // Handle incoming messages
   socket.on("chat message", (msg) => {
     if (msg && msg.text && msg.from && msg.to) {
+      console.log(`💬 Message from ${msg.from} to ${msg.to}: ${msg.text}`);
       chatMessages.push(msg);
 
       // Send message to recipient if online
@@ -35,17 +36,23 @@ io.on("connection", (socket) => {
         io.to(onlineUsers[msg.to]).emit("chat message", msg);
       }
 
-      // Send message back to sender (for their own display)
+      // Echo back to sender
       if (onlineUsers[msg.from]) {
         io.to(onlineUsers[msg.from]).emit("chat message", msg);
       }
     }
   });
 
-  // Handle typing indicator
+  // Typing indicator
   socket.on("typing", ({ to, from, isTyping }) => {
     if (onlineUsers[to]) {
       io.to(onlineUsers[to]).emit("typing", { from, isTyping });
+    }
+    // Track who is typing
+    if (isTyping) {
+      typingUsers[to] = from;
+    } else {
+      delete typingUsers[to];
     }
   });
 
@@ -57,7 +64,7 @@ io.on("connection", (socket) => {
       sendOnlineUsers();
     }
 
-    // Clear chat if fewer than 2 users online
+    // Clear chat if no users left
     if (Object.keys(onlineUsers).length < 2) {
       console.log("⚡ Less than 2 users online. Clearing chats.");
       chatMessages = [];
@@ -65,7 +72,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Send current online users to all clients
+  // Send all currently online users
   function sendOnlineUsers() {
     io.emit("online users", Object.keys(onlineUsers));
   }
@@ -73,5 +80,5 @@ io.on("connection", (socket) => {
 
 // Start the server
 http.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

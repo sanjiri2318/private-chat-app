@@ -8,24 +8,23 @@
     body {
       margin: 0;
       font-family: "Poppins", sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #f6d365, #fda085);
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
     }
     .container {
       background: #fff;
       padding: 40px;
       border-radius: 20px;
-      box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
       text-align: center;
       animation: fadeIn 1s ease forwards;
     }
     h1 {
       margin-bottom: 20px;
-      color: #764ba2;
+      color: #fda085;
     }
     input {
       width: 80%;
@@ -36,14 +35,13 @@
       font-size: 16px;
     }
     button {
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: linear-gradient(135deg, #f6d365, #fda085);
       color: white;
       border: none;
       padding: 15px 30px;
       font-size: 16px;
       border-radius: 8px;
       cursor: pointer;
-      transition: transform 0.2s;
     }
     button:hover {
       transform: scale(1.05);
@@ -56,9 +54,9 @@
 </head>
 <body>
   <div class="container">
-    <h1>🔐 Welcome to Private Chat</h1>
-    <input type="text" id="myNumber" placeholder="Your Number (e.g. 9876543210)" />
-    <input type="text" id="myName" placeholder="Your Name (e.g. Sanjith)" />
+    <h1>🔐 Private Chat</h1>
+    <input type="text" id="myNumber" placeholder="Your Phone Number" />
+    <input type="text" id="myName" placeholder="Your Name" />
     <button onclick="nextStep()">Next</button>
   </div>
 
@@ -72,7 +70,7 @@
       }
       localStorage.setItem("myNumber", myNumber);
       localStorage.setItem("myName", myName);
-      window.location.href = "chat.html";
+      window.location.href = "friends.html";
     }
   </script>
 </body>
